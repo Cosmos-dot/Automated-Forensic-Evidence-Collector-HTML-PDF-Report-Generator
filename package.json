@@ -8,12 +8,20 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "ejs": "^7.0.2",
     "puppeteer": "^25.16.0",
     "sqlite3": "^6.0.1",
     "systeminformation": "^5.33.19",
     "winreg": "^1.2.5"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cosmos-dot/Automated-Forensic-Evidence-Collector-HTML-PDF-Report-Generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Cosmos-dot/Automated-Forensic-Evidence-Collector-HTML-PDF-Report-Generator/issues"
+  },
+  "homepage": "https://github.com/Cosmos-dot/Automated-Forensic-Evidence-Collector-HTML-PDF-Report-Generator#readme",
+  "description": ""
 }
