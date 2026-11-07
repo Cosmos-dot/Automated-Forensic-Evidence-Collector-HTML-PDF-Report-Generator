@@ -1,27 +1,35 @@
 {
   "name": "forensic-collector",
   "version": "1.0.0",
+  "description": "Automated Forensic Evidence Collector with HTML and PDF Report Generator",
   "main": "index.js",
+  "bin": "index.js",
   "scripts": {
+    "start": "node index.js",
+    "build": "pkg . --targets node18-win-x64 --output dist/forensic-collector.exe",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "pkg": {
+    "assets": [
+      "templates/**/*"
+    ]
+  },
+  "keywords": [
+    "forensics",
+    "dfir",
+    "triage",
+    "evidence-collector"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "ejs": "^7.0.2",
-    "puppeteer": "^25.16.0",
+    "pdf-lib": "^1.17.1",
     "sqlite3": "^6.0.1",
     "systeminformation": "^5.33.19",
     "winreg": "^1.2.5"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Cosmos-dot/Automated-Forensic-Evidence-Collector-HTML-PDF-Report-Generator.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Cosmos-dot/Automated-Forensic-Evidence-Collector-HTML-PDF-Report-Generator/issues"
-  },
-  "homepage": "https://github.com/Cosmos-dot/Automated-Forensic-Evidence-Collector-HTML-PDF-Report-Generator#readme",
-  "description": ""
+  "devDependencies": {
+    "@yao-pkg/pkg": "^5.12.0"
+  }
 }

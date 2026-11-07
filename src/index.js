@@ -1,42 +1,65 @@
-const { getSystemInfo } = require('./collectors/system');
-const { getRunningProcesses } = require('./collectors/processes');
-const { getRegistryArtifacts } = require('./collectors/registry');
-const fs = require('fs');
 const path = require('path');
+const fs = require('fs');
+const { collectArtifacts } = require('./src/modules/collector');
+const { generateReports } = require('./src/reporters/reporter');
+const { createManifest } = require('./src/modules/manifestGenerator');
 
-async function runCollector() {
-  console.log('[*] Initializing Forensic Evidence Collection...');
-  
-  const timestamp = new Date().toISOString().replace(/:/g, '-');
-  
-  console.log('[+] Collecting System Specs & Logged-in Users...');
-  const systemData = await getSystemInfo();
+// Simple CLI Argument Handler
+const args = process.argv.slice(2);
 
-  console.log('[+] Collecting Volatile Running Processes & PIDs...');
-  const processData = await getRunningProcesses();
+if (args.includes('--help') || args.includes('-h')) {
+    console.log(`
+======================================================
+ AUTOMATED FORENSIC EVIDENCE COLLECTOR - HELP MENU
+======================================================
 
-  console.log('[+] Querying Windows Registry (Startup Items & USB History)...');
-  const registryData = await getRegistryArtifacts();
+Usage: node index.js [options]
 
-  const evidencePayload = {
-    metadata: {
-      collectedAt: new Date().toISOString(),
-      toolVersion: "1.0.0"
-    },
-    system: systemData,
-    processes: processData,
-    registry: registryData
-  };
-
-  const outputDir = path.join(__dirname, '../output');
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
-
-  const outputPath = path.join(outputDir, `evidence-${timestamp}.json`);
-  fs.writeFileSync(outputPath, JSON.stringify(evidencePayload, null, 2));
-
-  console.log(`[✔] Evidence successfully dumped to: ${outputPath}`);
+Options:
+  --output, -o <dir>  Specify custom output directory (default: ./output)
+  --no-pdf            Skip PDF generation (HTML & Manifest only)
+  --help, -h          Show this help screen
+  --version, -v       Display tool version
+`);
+    process.exit(0);
 }
 
-runCollector();
+if (args.includes('--version') || args.includes('-v')) {
+    console.log('v1.0.0');
+    process.exit(0);
+}
+
+// Extract custom output path if provided
+let outputDir = path.resolve(__dirname, 'output');
+const outputIdx = args.findIndex(arg => arg === '--output' || arg === '-o');
+if (outputIdx !== -1 && args[outputIdx + 1]) {
+    outputDir = path.resolve(args[outputIdx + 1]);
+}
+
+const skipPdf = args.includes('--no-pdf');
+
+(async () => {
+    try {
+        console.log('==============================================');
+        console.log(' AUTOMATED FORENSIC EVIDENCE COLLECTOR (DFIR) ');
+        console.log('==============================================\n');
+        console.log(`[*] Target Output Directory: ${outputDir}`);
+
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+        }
+
+        // 1. Collect evidence artifacts
+        const artifacts = await collectArtifacts();
+
+        // 2. Build audit manifest (Chain of Custody)
+        createManifest(artifacts, outputDir);
+
+        // 3. Render HTML & PDF reports
+        await generateReports(artifacts, outputDir, skipPdf);
+
+        console.log('\n[✔] Acquisition complete! Check your output directory.');
+    } catch (err) {
+        console.error('[-] Process execution error:', err);
+    }
+})();

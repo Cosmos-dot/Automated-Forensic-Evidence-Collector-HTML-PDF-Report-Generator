@@ -1,14 +1,50 @@
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
-const puppeteer = require('puppeteer');
+const { execFile } = require('child_process');
 
-async function generateReports(artifacts) {
-    const outputDir = path.resolve(__dirname, '../../output');
-    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+function getBrowserPath() {
+    const paths = [
+        'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+        'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+    ];
+    for (const p of paths) {
+        if (fs.existsSync(p)) return p;
+    }
+    return null;
+}
 
-    const htmlPath = path.join(outputDir, 'report.html');
-    const pdfPath = path.join(outputDir, 'report.pdf');
+function renderPdfNative(browserPath, htmlPath, pdfPath) {
+    return new Promise((resolve, reject) => {
+        const args = [
+            '--headless',
+            '--disable-gpu',
+            '--no-pdf-header-footer',
+            `--print-to-pdf=${pdfPath}`,
+            htmlPath
+        ];
+
+        execFile(browserPath, args, (err) => {
+            if (err) return reject(err);
+            resolve();
+        });
+    });
+}
+
+async function generateReports(artifacts, outputDir, skipPdf = false) {
+    let targetDir = outputDir;
+    if (!targetDir || typeof targetDir !== 'string' || targetDir.includes('snapshot')) {
+        targetDir = path.join(process.cwd(), 'output');
+    }
+
+    if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    const htmlPath = path.join(targetDir, 'report.html');
+    const pdfPath = path.join(targetDir, 'report.pdf');
     const templatePath = path.resolve(__dirname, '../../templates/reportTemplate.ejs');
 
     console.log('[*] Building HTML report with EJS template...');
@@ -21,20 +57,24 @@ async function generateReports(artifacts) {
     fs.writeFileSync(htmlPath, htmlContent, 'utf-8');
     console.log(`[+] HTML Report saved: ${htmlPath}`);
 
-    console.log('[*] Launching Puppeteer to export PDF report...');
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    
-    await page.goto(`file://${htmlPath}`, { waitUntil: 'networkidle0' });
-    await page.pdf({
-        path: pdfPath,
-        format: 'A4',
-        printBackground: true,
-        margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' }
-    });
+    if (skipPdf) {
+        console.log('[!] PDF generation skipped via flag.');
+        return;
+    }
 
-    await browser.close();
-    console.log(`[+] PDF Report saved: ${pdfPath}`);
+    const browserPath = getBrowserPath();
+    if (!browserPath) {
+        console.warn('[!] System Edge/Chrome browser not found. PDF export skipped.');
+        return;
+    }
+
+    try {
+        console.log(`[*] Exporting PDF via system browser CLI (${path.basename(browserPath)})...`);
+        await renderPdfNative(browserPath, htmlPath, pdfPath);
+        console.log(`[+] PDF Report saved: ${pdfPath}`);
+    } catch (err) {
+        console.error(`[-] PDF generation error: ${err.message}`);
+    }
 }
 
 module.exports = { generateReports };

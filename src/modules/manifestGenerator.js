@@ -2,36 +2,47 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+function calculateHash(data) {
+    return crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex');
+}
+
 function createManifest(artifacts, outputDir) {
-    console.log('[*] Generating forensic chain-of-custody audit manifest...');
+    // If outputDir is omitted or points inside a pkg snapshot (C:\snapshot\...), force real host path
+    let targetDir = outputDir;
+    if (!targetDir || targetDir.includes('snapshot')) {
+        targetDir = path.join(process.cwd(), 'output');
+    }
     
+    if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    const manifestPath = path.join(targetDir, 'manifest.json');
+
+    const artifactManifest = Object.keys(artifacts).map((key) => {
+        const data = artifacts[key];
+        return {
+            name: key,
+            sha256Hash: calculateHash(data),
+            sizeBytes: Buffer.byteLength(JSON.stringify(data))
+        };
+    });
+
     const manifestData = {
         metadata: {
             title: "Automated Forensic Evidence Collection Manifest",
             timestampUTC: new Date().toISOString(),
             platform: `${process.platform.toUpperCase()} (${process.arch})`,
             nodeVersion: process.version,
-            collectedArtifactsCount: artifacts.length
+            collectedArtifactsCount: artifactManifest.length,
+            masterManifestHash: calculateHash(artifactManifest)
         },
-        artifacts: artifacts.map(item => ({
-            name: item.name,
-            sha256Hash: item.hash,
-            sizeBytes: Buffer.byteLength(item.data, 'utf-8')
-        }))
+        artifacts: artifactManifest
     };
 
-    // Calculate Master Integrity Hash over the manifest artifacts array
-    const manifestString = JSON.stringify(manifestData.artifacts);
-    manifestData.metadata.masterManifestHash = crypto
-        .createHash('sha256')
-        .update(manifestString)
-        .digest('hex');
-
-    const manifestPath = path.join(outputDir, 'manifest.json');
     fs.writeFileSync(manifestPath, JSON.stringify(manifestData, null, 2), 'utf-8');
-    
-    console.log(`[+] Forensic Manifest created: ${manifestPath}`);
-    return manifestPath;
+    console.log(`[+] Forensic Manifest generated: ${manifestPath}`);
+    return manifestData;
 }
 
 module.exports = { createManifest };

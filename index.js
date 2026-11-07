@@ -9,7 +9,8 @@ const { createManifest } = require('./src/modules/manifestGenerator');
         console.log(' AUTOMATED FORENSIC EVIDENCE COLLECTOR (DFIR) ');
         console.log('==============================================\n');
 
-        const outputDir = path.resolve(__dirname, 'output');
+        // Ensure outputDir targets the execution directory on the host machine
+const outputDir = path.join(process.cwd(), 'output');
         
         // 1. Collect evidence artifacts
         const artifacts = await collectArtifacts();
