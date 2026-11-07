@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const si = require('systeminformation');
 const { getRunKeys } = require('./registryCollector');
+const { getChromeHistory } = require('./browserCollector');
 
 function computeHash(data) {
     return crypto.createHash('sha256').update(data).digest('hex');
@@ -13,6 +14,7 @@ async function collectArtifacts() {
     const networkConns = await si.networkConnections();
     const processes = await si.processes();
     const runKeys = await getRunKeys();
+    const browserHistory = await getChromeHistory();
 
     const artifacts = [];
 
@@ -46,6 +48,14 @@ async function collectArtifacts() {
         name: 'Windows User Persistence Run Keys (Registry)',
         data: regData,
         hash: computeHash(regData)
+    });
+
+    // 5. Chrome Browser History Artifacts
+    const browserData = JSON.stringify(browserHistory, null, 2);
+    artifacts.push({
+        name: 'Chrome Web History (Recent Visits)',
+        data: browserData,
+        hash: computeHash(browserData)
     });
 
     return artifacts;
