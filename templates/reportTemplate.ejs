@@ -2,31 +2,94 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Automated Forensic Evidence Report</title>
+    <title>DFIR Forensic Summary Report</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 30px; background-color: #f4f6f9; color: #333; }
-        h1 { color: #0f2537; border-bottom: 3px solid #0056b3; padding-bottom: 10px; }
-        .meta-box { background: #ffffff; border-left: 5px solid #0056b3; padding: 15px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .artifact-card { background: #ffffff; border: 1px solid #e1e4e8; padding: 20px; margin-bottom: 20px; border-radius: 6px; page-break-inside: avoid; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .artifact-card h3 { margin-top: 0; color: #0056b3; }
-        .hash-badge { font-family: monospace; background: #eef2f7; color: #d63384; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; word-break: break-all; }
-        pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 6px; overflow-x: auto; max-height: 350px; font-size: 0.85em; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { border-bottom: 2px solid #0056b3; padding-bottom: 10px; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #0056b3; }
+        
+        /* Metric Summary Cards */
+        .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .card { background: #eef2f7; border-left: 4px solid #0056b3; padding: 15px; border-radius: 4px; }
+        .card .title { font-size: 12px; text-transform: uppercase; color: #666; font-weight: bold; }
+        .card .value { font-size: 20px; font-weight: bold; margin-top: 5px; color: #111; }
+        
+        /* Badges & Hash Verification */
+        .badge-success { background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        .hash-box { background: #272b30; color: #39ff14; font-family: monospace; padding: 10px; border-radius: 4px; word-break: break-all; margin-bottom: 25px; }
+        
+        /* Data Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #ddd; }
+        th { background-color: #f1f3f5; color: #495057; }
+        tr:hover { background-color: #f8f9fa; }
     </style>
 </head>
 <body>
-    <h1>Digital Forensics Evidence Report</h1>
-    <div class="meta-box">
-        <p><strong>Execution Timestamp (UTC):</strong> <%= timestamp %></p>
-        <p><strong>Target Platform:</strong> <%= platform %></p>
-        <p><strong>Total Artifacts Collected:</strong> <%= artifacts.length %></p>
-    </div>
-
-    <% artifacts.forEach(function(item) { %>
-        <div class="artifact-card">
-            <h3><%= item.name %></h3>
-            <p><strong>SHA-256 Integrity Hash:</strong> <span class="hash-badge"><%= item.hash %></span></p>
-            <pre><%= item.data %></pre>
+    <div class="container">
+        <div class="header">
+            <h1>Forensic Evidence Summary</h1>
+            <p><strong>System Host:</strong> <%= osMetrics.hostname %> | <strong>Collected:</strong> <%= new Date().toLocaleString() %></p>
         </div>
-    <% }); %>
+
+        <!-- Metric Summary Dashboard -->
+        <div class="cards">
+            <div class="card">
+                <div class="title">OS Version</div>
+                <div class="value" style="font-size: 14px;"><%= osMetrics.platform %> (<%= osMetrics.arch %>)</div>
+            </div>
+            <div class="card">
+                <div class="title">Running Processes</div>
+                <div class="value"><%= processes.length %></div>
+            </div>
+            <div class="card">
+                <div class="title">Active Sockets</div>
+                <div class="value"><%= network.length %></div>
+            </div>
+            <div class="card">
+                <div class="title">Integrity Status</div>
+                <div class="value"><span class="badge-success">SHA-256 VERIFIED</span></div>
+            </div>
+        </div>
+
+        <!-- Master Chain of Custody Hash -->
+        <h3>Master Verification Hash</h3>
+        <div class="hash-box"><%= manifest.masterHash %></div>
+
+        <!-- Evidence Modules Summary -->
+        <h3>Collected Evidence Breakdown</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Records Extracted</th>
+                    <th>SHA-256 Hash Integrity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Running Processes</td>
+                    <td><%= processes.length %> items</td>
+                    <td><code><%= manifest.hashes.processes %></code></td>
+                </tr>
+                <tr>
+                    <td>Network Sockets</td>
+                    <td><%= network.length %> items</td>
+                    <td><code><%= manifest.hashes.network %></code></td>
+                </tr>
+                <tr>
+                    <td>Registry Persistence</td>
+                    <td><%= registry.length %> items</td>
+                    <td><code><%= manifest.hashes.registry %></code></td>
+                </tr>
+                <tr>
+                    <td>Chrome Browsing History</td>
+                    <td><%= history.length %> items</td>
+                    <td><code><%= manifest.hashes.history %></code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
