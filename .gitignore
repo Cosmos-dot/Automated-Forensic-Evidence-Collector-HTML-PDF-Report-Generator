@@ -1,14 +1,9 @@
-# Output files & reports
+# Build output executable
+dist/
+
+# Generated evidence output
 output/
-*.pdf
-*.html
-*.json
-temp_History*
 
-# Node dependencies
+# Dependencies & logs
 node_modules/
-package-lock.json
-
-# Environment & Logs
-*.log
-.env
+npm-debug.log
