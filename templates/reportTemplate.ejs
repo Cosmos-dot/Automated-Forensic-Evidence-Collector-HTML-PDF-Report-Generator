@@ -2,43 +2,209 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>DFIR Forensic Summary Report</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFIR Incident Response & Evidence Report</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { border-bottom: 2px solid #0056b3; padding-bottom: 10px; margin-bottom: 20px; }
-        .header h1 { margin: 0; color: #0056b3; }
-        
-        /* Metric Summary Cards */
-        .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
-        .card { background: #eef2f7; border-left: 4px solid #0056b3; padding: 15px; border-radius: 4px; }
-        .card .title { font-size: 12px; text-transform: uppercase; color: #666; font-weight: bold; }
-        .card .value { font-size: 20px; font-weight: bold; margin-top: 5px; color: #111; }
-        
-        /* Badges & Hash Verification */
-        .badge-success { background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
-        .hash-box { background: #272b30; color: #39ff14; font-family: monospace; padding: 10px; border-radius: 4px; word-break: break-all; margin-bottom: 25px; }
-        
-        /* Data Tables */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #ddd; }
-        th { background-color: #f1f3f5; color: #495057; }
-        tr:hover { background-color: #f8f9fa; }
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --success: #16a34a;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 30px 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Header Banner */
+        .header-card {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+            padding: 28px 32px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-card h1 {
+            margin: 0 0 6px 0;
+            font-size: 26px;
+            letter-spacing: -0.5px;
+        }
+
+        .header-meta {
+            color: #94a3b8;
+            font-size: 14px;
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Top Executive Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card .title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .card .value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 6px;
+            color: var(--primary);
+        }
+
+        .badge-verified {
+            display: inline-block;
+            background: #dcfce7;
+            color: var(--success);
+            font-weight: 700;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        /* Hash Terminal Box */
+        .hash-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 28px;
+        }
+
+        .hash-section h3 {
+            margin-top: 0;
+            font-size: 16px;
+            color: var(--primary);
+        }
+
+        .hash-box {
+            background: #090d16;
+            color: #4ade80;
+            font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+            font-size: 13px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            word-break: break-all;
+        }
+
+        /* Search Filter */
+        .search-bar {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .search-bar:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Evidence Table */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 28px;
+        }
+
+        .table-card h3 {
+            padding: 20px 20px 0 20px;
+            margin: 0;
+            font-size: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        code {
+            font-family: monospace;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #0f172a;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Forensic Evidence Summary</h1>
-            <p><strong>System Host:</strong> <%= osMetrics.hostname %> | <strong>Collected:</strong> <%= new Date().toLocaleString() %></p>
+        
+        <!-- Main Header -->
+        <div class="header-card">
+            <h1>Automated DFIR Evidence Report</h1>
+            <div class="header-meta">
+                <span><strong>Target Host:</strong> <%= osMetrics.hostname %></span>
+                <span><strong>Platform:</strong> <%= osMetrics.platform %> (<%= osMetrics.arch %>)</span>
+                <span><strong>Acquisition Time:</strong> <%= new Date().toLocaleString() %></span>
+            </div>
         </div>
 
-        <!-- Metric Summary Dashboard -->
-        <div class="cards">
-            <div class="card">
-                <div class="title">OS Version</div>
-                <div class="value" style="font-size: 14px;"><%= osMetrics.platform %> (<%= osMetrics.arch %>)</div>
-            </div>
+        <!-- Metric KPI Cards -->
+        <div class="metrics-grid">
             <div class="card">
                 <div class="title">Running Processes</div>
                 <div class="value"><%= processes.length %></div>
@@ -48,48 +214,74 @@
                 <div class="value"><%= network.length %></div>
             </div>
             <div class="card">
-                <div class="title">Integrity Status</div>
-                <div class="value"><span class="badge-success">SHA-256 VERIFIED</span></div>
+                <div class="title">Autostart Keys</div>
+                <div class="value"><%= registry.length %></div>
+            </div>
+            <div class="card">
+                <div class="title">Chain of Custody</div>
+                <div class="value"><span class="badge-verified">SHA-256 SECURED</span></div>
             </div>
         </div>
 
-        <!-- Master Chain of Custody Hash -->
-        <h3>Master Verification Hash</h3>
-        <div class="hash-box"><%= manifest.masterHash %></div>
+        <!-- Master Integrity Verification -->
+        <div class="hash-section">
+            <h3>Master Chain-of-Custody Manifest Hash</h3>
+            <div class="hash-box"><%= manifest.masterHash %></div>
+        </div>
 
-        <!-- Evidence Modules Summary -->
-        <h3>Collected Evidence Breakdown</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Records Extracted</th>
-                    <th>SHA-256 Hash Integrity</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Running Processes</td>
-                    <td><%= processes.length %> items</td>
-                    <td><code><%= manifest.hashes.processes %></code></td>
-                </tr>
-                <tr>
-                    <td>Network Sockets</td>
-                    <td><%= network.length %> items</td>
-                    <td><code><%= manifest.hashes.network %></code></td>
-                </tr>
-                <tr>
-                    <td>Registry Persistence</td>
-                    <td><%= registry.length %> items</td>
-                    <td><code><%= manifest.hashes.registry %></code></td>
-                </tr>
-                <tr>
-                    <td>Chrome Browsing History</td>
-                    <td><%= history.length %> items</td>
-                    <td><code><%= manifest.hashes.history %></code></td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- Quick Filter -->
+        <input type="text" id="tableFilter" class="search-bar" onkeyup="filterTables()" placeholder="🔍 Quick search processes, IP addresses, ports, or registry keys...">
+
+        <!-- Evidence Breakdown Table -->
+        <div class="table-card">
+            <h3>Collected Artifact Categories</h3>
+            <table id="evidenceTable">
+                <thead>
+                    <tr>
+                        <th>Artifact Module</th>
+                        <th>Extracted Items</th>
+                        <th>SHA-256 Integrity Hash</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Running Processes</strong></td>
+                        <td><%= processes.length %> items</td>
+                        <td><code><%= manifest.hashes.processes %></code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Network Connections</strong></td>
+                        <td><%= network.length %> items</td>
+                        <td><code><%= manifest.hashes.network %></code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Registry Persistence Keys</strong></td>
+                        <td><%= registry.length %> items</td>
+                        <td><code><%= manifest.hashes.registry %></code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Chrome Browser History</strong></td>
+                        <td><%= history.length %> items</td>
+                        <td><code><%= manifest.hashes.history %></code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
     </div>
+
+    <!-- Live Search Script -->
+    <script>
+        function filterTables() {
+            const input = document.getElementById("tableFilter");
+            const filter = input.value.toLowerCase();
+            const rows = document.querySelectorAll("tbody tr");
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? "" : "none";
+            });
+        }
+    </script>
 </body>
 </html>
