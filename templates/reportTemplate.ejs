@@ -11,7 +11,22 @@
         .header-card { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; padding: 26px 30px; border-radius: 12px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
         .header-card h1 { margin: 0 0 6px 0; font-size: 24px; }
         .header-meta { color: #cbd5e1; font-size: 13px; display: flex; flex-wrap: wrap; gap: 18px; }
+        .header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
         .badge-verified { background: #dcfce7; color: var(--success); font-weight: 700; font-size: 12px; padding: 6px 12px; border-radius: 999px; }
+        .download-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn-dl {
+            border: none;
+            border-radius: 6px;
+            padding: 8px 14px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+        .btn-dl:hover { opacity: 0.9; }
+        .btn-html { background: #2563eb; color: #ffffff; }
+        .btn-pdf { background: #10b981; color: #ffffff; }
+        .btn-json { background: #334155; color: #f8fafc; border: 1px solid #475569; }
         .badge-browser { display: inline-block; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #e0e7ff; color: #1d4ed8; }
         .badge-edge { background: #ccfbf1; color: #0f766e; }
         .badge-firefox { background: #ffedd5; color: #c2410c; }
@@ -36,7 +51,13 @@
         code { font-family: Consolas, monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
         .url-cell { max-width: 340px; word-break: break-all; color: var(--accent); }
         .footer { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 24px; }
-        @media print { body { background: #fff; padding: 0; } .search-bar { display: none !important; } .header-card, .badge-browser { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .table-card, .card, .hash-section { break-inside: avoid-page; } tr { break-inside: avoid; } }
+        @media print {
+            body { background: #fff; padding: 0; }
+            .search-bar, .download-bar { display: none !important; }
+            .header-card, .badge-browser { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .table-card, .card, .hash-section { break-inside: avoid-page; }
+            tr { break-inside: avoid; }
+        }
     </style>
 </head>
 <body>
@@ -51,8 +72,16 @@
                     <span><strong>Acquired:</strong> <%= acquisitionTime %></span>
                 </div>
             </div>
-            <div><span class="badge-verified">SHA-256 VERIFIED</span></div>
+            <div class="header-actions">
+                <span class="badge-verified">SHA-256 VERIFIED</span>
+                <div class="download-bar">
+                    <button type="button" class="btn-dl btn-html" onclick="downloadHtmlReport()">Download HTML</button>
+                    <button type="button" class="btn-dl btn-pdf" onclick="window.print()">Download PDF</button>
+                    <button type="button" class="btn-dl btn-json" onclick="downloadJsonBundle()">Download JSON</button>
+                </div>
+            </div>
         </div>
+
         <div class="metrics-grid">
             <div class="card"><div class="title">Running Processes</div><div class="value"><%= processes.length %></div><div class="sub">Active Windows tasks</div></div>
             <div class="card"><div class="title">Active Sockets</div><div class="value"><%= network.length %></div><div class="sub">TCP / UDP endpoints</div></div>
@@ -60,6 +89,7 @@
             <div class="card"><div class="title">Persistence Keys</div><div class="value"><%= registry.runKeys.length %></div><div class="sub"><%= registry.usbHistory.length %> USB devices logged</div></div>
             <div class="card"><div class="title">Browser History</div><div class="value"><%= history.length %></div><div class="sub">Chrome, Edge &amp; Firefox</div></div>
         </div>
+
         <div class="hash-section">
             <h3>Host Telemetry &amp; Volatile Memory</h3>
             <div class="sys-grid">
@@ -69,11 +99,14 @@
                 <div><strong>Free RAM:</strong> <%= osMetrics.freemem %></div>
             </div>
         </div>
+
         <div class="hash-section">
             <h3>Master Chain-of-Custody Manifest Hash (SHA-256)</h3>
             <div class="hash-box"><%= manifest.masterHash %></div>
         </div>
+
         <input type="text" id="tableFilter" class="search-bar" onkeyup="filterTables()" placeholder="Search processes, PIDs, IP addresses, scheduled tasks, registry keys, or browser URLs...">
+
         <div class="table-card">
             <div class="table-header"><h3>Chain-of-Custody Artifact Hashes</h3><span>UTC: <%= manifest.metadata.timestampUTC %></span></div>
             <table>
@@ -88,6 +121,7 @@
                 </tbody>
             </table>
         </div>
+
         <div class="table-card">
             <div class="table-header"><h3>Scheduled Tasks (Persistence &amp; Automation)</h3><span><%= scheduledTasks.length %> tasks</span></div>
             <table>
@@ -98,6 +132,7 @@
                 </tbody>
             </table>
         </div>
+
         <div class="table-card">
             <div class="table-header"><h3>Registry Persistence (Run / RunOnce)</h3><span><%= registry.runKeys.length %> entries</span></div>
             <table>
@@ -108,6 +143,7 @@
                 </tbody>
             </table>
         </div>
+
         <div class="table-card">
             <div class="table-header"><h3>USB Storage Device History (USBSTOR)</h3><span><%= registry.usbHistory.length %> devices</span></div>
             <table>
@@ -118,6 +154,7 @@
                 </tbody>
             </table>
         </div>
+
         <div class="table-card">
             <div class="table-header"><h3>Multi-Browser History (Chrome, Edge &amp; Firefox)</h3><span><%= history.length %> recent visits</span></div>
             <table>
@@ -128,6 +165,7 @@
                 </tbody>
             </table>
         </div>
+
         <div class="table-card">
             <div class="table-header"><h3>Active Network Connections</h3><span>Showing <%= Math.min(network.length, 100) %> of <%= network.length %></span></div>
             <table>
@@ -137,6 +175,7 @@
                 </tbody>
             </table>
         </div>
+
         <div class="table-card">
             <div class="table-header"><h3>Running Processes</h3><span>Showing <%= Math.min(processes.length, 100) %> of <%= processes.length %></span></div>
             <table>
@@ -146,8 +185,44 @@
                 </tbody>
             </table>
         </div>
+
         <div class="footer">Automated DFIR Forensic Evidence Collector v1.1.0 &bull; Host: <%= osMetrics.hostname %></div>
     </div>
-    <script>function filterTables() { const f = document.getElementById("tableFilter").value.toLowerCase(); document.querySelectorAll("tbody tr").forEach(r => { r.style.display = r.textContent.toLowerCase().includes(f) ? "" : "none"; }); }</script>
+
+    <script id="embedded-evidence" type="application/json"><%- JSON.stringify({ manifest, osMetrics, scheduledTasks, registry, history, network, processes }).replace(/</g, '\\u003c') %></script>
+
+    <script>
+        function filterTables() {
+            const f = document.getElementById("tableFilter").value.toLowerCase();
+            document.querySelectorAll("tbody tr").forEach(r => {
+                r.style.display = r.textContent.toLowerCase().includes(f) ? "" : "none";
+            });
+        }
+
+        function triggerFileDownload(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadHtmlReport() {
+            const host = "<%= osMetrics.hostname %>";
+            const htmlDoc = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            triggerFileDownload(htmlDoc, `DFIR-Report-${host}.html`, "text/html;charset=utf-8");
+        }
+
+        function downloadJsonBundle() {
+            const host = "<%= osMetrics.hostname %>";
+            const rawJson = document.getElementById("embedded-evidence").textContent;
+            const formatted = JSON.stringify(JSON.parse(rawJson), null, 2);
+            triggerFileDownload(formatted, `DFIR-Evidence-${host}.json`, "application/json;charset=utf-8");
+        }
+    </script>
 </body>
 </html>
