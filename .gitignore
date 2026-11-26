@@ -1,9 +1,7 @@
-# Build output executable
+﻿node_modules/
 dist/
-
-# Generated evidence output
 output/
-
-# Dependencies & logs
-node_modules/
-npm-debug.log
+output_exe/
+src/output/
+*.log
+.DS_Store
