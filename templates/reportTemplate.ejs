@@ -1,144 +1,42 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DFIR Incident Response &amp; Evidence Report - <%= osMetrics.hostname %></title>
+    <title>DFIR Evidence Report - <%= osMetrics.hostname %></title>
     <style>
-        :root {
-            --primary: #0f172a;
-            --accent: #2563eb;
-            --success: #16a34a;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-        }
+        :root { --primary: #0f172a; --accent: #2563eb; --success: #16a34a; --bg: #f8fafc; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --border: #e2e8f0; }
         * { box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 28px 20px;
-            line-height: 1.5;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 28px 20px; line-height: 1.5; }
         .container { max-width: 1150px; margin: 0 auto; }
-        .header-card {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #ffffff;
-            padding: 26px 30px;
-            border-radius: 12px;
-            margin-bottom: 22px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        .header-card h1 { margin: 0 0 6px 0; font-size: 24px; letter-spacing: -0.4px; }
+        .header-card { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; padding: 26px 30px; border-radius: 12px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .header-card h1 { margin: 0 0 6px 0; font-size: 24px; }
         .header-meta { color: #cbd5e1; font-size: 13px; display: flex; flex-wrap: wrap; gap: 18px; }
-        .badge-verified {
-            display: inline-block;
-            background: #dcfce7;
-            color: var(--success);
-            font-weight: 700;
-            font-size: 12px;
-            padding: 6px 12px;
-            border-radius: 999px;
-            letter-spacing: 0.4px;
-        }
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 14px;
-            margin-bottom: 22px;
-        }
-        .card {
-            background: var(--card-bg);
-            padding: 18px 20px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-        }
-        .card .title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
+        .badge-verified { background: #dcfce7; color: var(--success); font-weight: 700; font-size: 12px; padding: 6px 12px; border-radius: 999px; }
+        .badge-browser { display: inline-block; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #e0e7ff; color: #1d4ed8; }
+        .badge-edge { background: #ccfbf1; color: #0f766e; }
+        .badge-firefox { background: #ffedd5; color: #c2410c; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 14px; margin-bottom: 22px; }
+        .card, .hash-section { background: var(--card-bg); padding: 18px 20px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 22px; }
+        .metrics-grid .card { margin-bottom: 0; }
+        .card .title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
         .card .value { font-size: 24px; font-weight: 700; margin-top: 4px; color: var(--primary); }
-        .card .sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-        .hash-section {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 18px 20px;
-            margin-bottom: 22px;
-        }
+        .card .sub { font-size: 12px; color: var(--text-muted); }
         .hash-section h3 { margin: 0 0 10px 0; font-size: 15px; color: var(--primary); }
-        .hash-box {
-            background: #090d16;
-            color: #4ade80;
-            font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
-            font-size: 12.5px;
-            padding: 12px 14px;
-            border-radius: 6px;
-            word-break: break-all;
-        }
+        .hash-box { background: #090d16; color: #4ade80; font-family: Consolas, monospace; font-size: 12.5px; padding: 12px 14px; border-radius: 6px; word-break: break-all; }
         .sys-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 20px; font-size: 13px; }
-        .search-bar {
-            width: 100%;
-            padding: 12px 16px;
-            font-size: 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            outline: none;
-            background: #ffffff;
-        }
-        .search-bar:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
-        .table-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 24px;
-        }
-        .table-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .search-bar { width: 100%; padding: 12px 16px; font-size: 14px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; background: #fff; }
+        .table-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
+        .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .table-header h3 { margin: 0; font-size: 16px; color: var(--primary); }
         .table-header span { font-size: 12px; color: var(--text-muted); font-weight: 600; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-        th {
-            background-color: #f1f5f9;
-            color: var(--text-muted);
-            font-weight: 600;
-            padding: 10px 16px;
-            border-bottom: 1px solid var(--border);
-            font-size: 11.5px;
-            text-transform: uppercase;
-        }
+        th { background: #f1f5f9; color: var(--text-muted); font-weight: 600; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 11.5px; text-transform: uppercase; }
         td { padding: 10px 16px; border-bottom: 1px solid var(--border); vertical-align: top; word-break: break-word; }
         tr:last-child td { border-bottom: none; }
-        tr:hover { background-color: #f8fafc; }
-        code {
-            font-family: "Cascadia Code", Consolas, monospace;
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #0f172a;
-        }
-        .url-cell { max-width: 380px; word-break: break-all; color: var(--accent); }
+        code { font-family: Consolas, monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+        .url-cell { max-width: 340px; word-break: break-all; color: var(--accent); }
         .footer { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 24px; }
-        @media print {
-            body { background: #ffffff; padding: 0; }
-            .search-bar { display: none !important; }
-            .header-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .table-card, .card, .hash-section { break-inside: avoid-page; }
-            tr { break-inside: avoid; }
-        }
+        @media print { body { background: #fff; padding: 0; } .search-bar { display: none !important; } .header-card, .badge-browser { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .table-card, .card, .hash-section { break-inside: avoid-page; } tr { break-inside: avoid; } }
     </style>
 </head>
 <body>
@@ -156,26 +54,11 @@
             <div><span class="badge-verified">SHA-256 VERIFIED</span></div>
         </div>
         <div class="metrics-grid">
-            <div class="card">
-                <div class="title">Running Processes</div>
-                <div class="value"><%= processes.length %></div>
-                <div class="sub">Active Windows tasks</div>
-            </div>
-            <div class="card">
-                <div class="title">Active Sockets</div>
-                <div class="value"><%= network.length %></div>
-                <div class="sub">TCP / UDP endpoints</div>
-            </div>
-            <div class="card">
-                <div class="title">Persistence Keys</div>
-                <div class="value"><%= registry.runKeys.length %></div>
-                <div class="sub"><%= registry.usbHistory.length %> USB devices logged</div>
-            </div>
-            <div class="card">
-                <div class="title">Browser History</div>
-                <div class="value"><%= history.length %></div>
-                <div class="sub">Recent Chrome visits</div>
-            </div>
+            <div class="card"><div class="title">Running Processes</div><div class="value"><%= processes.length %></div><div class="sub">Active Windows tasks</div></div>
+            <div class="card"><div class="title">Active Sockets</div><div class="value"><%= network.length %></div><div class="sub">TCP / UDP endpoints</div></div>
+            <div class="card"><div class="title">Scheduled Tasks</div><div class="value"><%= scheduledTasks.length %></div><div class="sub">Non-Microsoft tasks</div></div>
+            <div class="card"><div class="title">Persistence Keys</div><div class="value"><%= registry.runKeys.length %></div><div class="sub"><%= registry.usbHistory.length %> USB devices logged</div></div>
+            <div class="card"><div class="title">Browser History</div><div class="value"><%= history.length %></div><div class="sub">Chrome, Edge &amp; Firefox</div></div>
         </div>
         <div class="hash-section">
             <h3>Host Telemetry &amp; Volatile Memory</h3>
@@ -190,144 +73,81 @@
             <h3>Master Chain-of-Custody Manifest Hash (SHA-256)</h3>
             <div class="hash-box"><%= manifest.masterHash %></div>
         </div>
-        <input type="text" id="tableFilter" class="search-bar" onkeyup="filterTables()" placeholder="Search processes, PIDs, IP addresses, ports, registry keys, or URLs...">
+        <input type="text" id="tableFilter" class="search-bar" onkeyup="filterTables()" placeholder="Search processes, PIDs, IP addresses, scheduled tasks, registry keys, or browser URLs...">
         <div class="table-card">
-            <div class="table-header">
-                <h3>Chain-of-Custody Artifact Hashes</h3>
-                <span>UTC: <%= manifest.metadata.timestampUTC %></span>
-            </div>
+            <div class="table-header"><h3>Chain-of-Custody Artifact Hashes</h3><span>UTC: <%= manifest.metadata.timestampUTC %></span></div>
             <table>
-                <thead>
-                    <tr>
-                        <th>Artifact Module</th>
-                        <th>Record Count</th>
-                        <th>SHA-256 Integrity Hash</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Artifact Module</th><th>Record Count</th><th>SHA-256 Integrity Hash</th></tr></thead>
                 <tbody>
                     <tr><td><strong>OS &amp; Volatile Metrics</strong></td><td>1 snapshot</td><td><code><%= manifest.hashes.osMetrics %></code></td></tr>
                     <tr><td><strong>Running Processes</strong></td><td><%= processes.length %> items</td><td><code><%= manifest.hashes.processes %></code></td></tr>
                     <tr><td><strong>Network Connections</strong></td><td><%= network.length %> items</td><td><code><%= manifest.hashes.network %></code></td></tr>
+                    <tr><td><strong>Scheduled Tasks</strong></td><td><%= scheduledTasks.length %> tasks</td><td><code><%= manifest.hashes.scheduledTasks %></code></td></tr>
                     <tr><td><strong>Registry &amp; USB Persistence</strong></td><td><%= registry.runKeys.length %> keys / <%= registry.usbHistory.length %> USB</td><td><code><%= manifest.hashes.registry %></code></td></tr>
-                    <tr><td><strong>Chrome Browser History</strong></td><td><%= history.length %> items</td><td><code><%= manifest.hashes.history %></code></td></tr>
+                    <tr><td><strong>Multi-Browser History</strong></td><td><%= history.length %> items</td><td><code><%= manifest.hashes.history %></code></td></tr>
                 </tbody>
             </table>
         </div>
         <div class="table-card">
-            <div class="table-header">
-                <h3>Registry Persistence (Run / RunOnce)</h3>
-                <span><%= registry.runKeys.length %> entries</span>
-            </div>
+            <div class="table-header"><h3>Scheduled Tasks (Persistence &amp; Automation)</h3><span><%= scheduledTasks.length %> tasks</span></div>
             <table>
-                <thead>
-                    <tr><th>Registry Hive</th><th>Entry Name</th><th>Type</th><th>Executable / Command</th></tr>
-                </thead>
+                <thead><tr><th>Task Path</th><th>Status</th><th>Next Run</th><th>Command / Action</th></tr></thead>
                 <tbody>
-                    <% if (registry.runKeys.length === 0) { %>
-                        <tr><td colspan="4">No Run/RunOnce entries found.</td></tr>
-                    <% } else { %>
-                        <% registry.runKeys.forEach(item => { %>
-                            <tr>
-                                <td><code><%= item.hive %></code></td>
-                                <td><strong><%= item.name %></strong></td>
-                                <td><%= item.type %></td>
-                                <td><code><%= item.value %></code></td>
-                            </tr>
-                        <% }) %>
-                    <% } %>
+                    <% if (scheduledTasks.length === 0) { %><tr><td colspan="4">No custom scheduled tasks found.</td></tr><% } else { %>
+                    <% scheduledTasks.forEach(task => { %><tr><td><strong><%= task.taskName %></strong></td><td><%= task.status %></td><td><code><%= task.nextRunTime %></code></td><td><code><%= task.taskToRun %></code></td></tr><% }) %><% } %>
                 </tbody>
             </table>
         </div>
         <div class="table-card">
-            <div class="table-header">
-                <h3>USB Storage Device History (USBSTOR)</h3>
-                <span><%= registry.usbHistory.length %> devices</span>
-            </div>
+            <div class="table-header"><h3>Registry Persistence (Run / RunOnce)</h3><span><%= registry.runKeys.length %> entries</span></div>
+            <table>
+                <thead><tr><th>Registry Hive</th><th>Entry Name</th><th>Type</th><th>Executable / Command</th></tr></thead>
+                <tbody>
+                    <% if (registry.runKeys.length === 0) { %><tr><td colspan="4">No Run/RunOnce entries found.</td></tr><% } else { %>
+                    <% registry.runKeys.forEach(item => { %><tr><td><code><%= item.hive %></code></td><td><strong><%= item.name %></strong></td><td><%= item.type %></td><td><code><%= item.value %></code></td></tr><% }) %><% } %>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-card">
+            <div class="table-header"><h3>USB Storage Device History (USBSTOR)</h3><span><%= registry.usbHistory.length %> devices</span></div>
             <table>
                 <thead><tr><th>#</th><th>Device Identifier</th></tr></thead>
                 <tbody>
-                    <% if (registry.usbHistory.length === 0) { %>
-                        <tr><td colspan="2">No USB storage history recorded or access denied.</td></tr>
-                    <% } else { %>
-                        <% registry.usbHistory.forEach((dev, idx) => { %>
-                            <tr><td><%= idx + 1 %></td><td><code><%= dev %></code></td></tr>
-                        <% }) %>
-                    <% } %>
+                    <% if (registry.usbHistory.length === 0) { %><tr><td colspan="2">No USB storage history recorded or access denied.</td></tr><% } else { %>
+                    <% registry.usbHistory.forEach((dev, idx) => { %><tr><td><%= idx + 1 %></td><td><code><%= dev %></code></td></tr><% }) %><% } %>
                 </tbody>
             </table>
         </div>
         <div class="table-card">
-            <div class="table-header">
-                <h3>Chrome Browser History (Latest 50)</h3>
-                <span><%= history.length %> entries</span>
-            </div>
+            <div class="table-header"><h3>Multi-Browser History (Chrome, Edge &amp; Firefox)</h3><span><%= history.length %> recent visits</span></div>
             <table>
-                <thead><tr><th>Timestamp (Local)</th><th>Page Title</th><th>URL</th><th>Visits</th></tr></thead>
+                <thead><tr><th>Browser</th><th>Timestamp (Local)</th><th>Page Title</th><th>URL</th><th>Visits</th></tr></thead>
                 <tbody>
-                    <% if (history.length === 0) { %>
-                        <tr><td colspan="4">No Chrome history found on host.</td></tr>
-                    <% } else { %>
-                        <% history.forEach(row => { %>
-                            <tr>
-                                <td><code><%= row.last_visit_time %></code></td>
-                                <td><strong><%= row.title %></strong></td>
-                                <td class="url-cell"><%= row.url %></td>
-                                <td><%= row.visit_count %></td>
-                            </tr>
-                        <% }) %>
-                    <% } %>
+                    <% if (history.length === 0) { %><tr><td colspan="5">No Chrome, Edge, or Firefox history found on host.</td></tr><% } else { %>
+                    <% history.forEach(row => { %><tr><td><span class="badge-browser <%= row.browser === 'Edge' ? 'badge-edge' : (row.browser === 'Firefox' ? 'badge-firefox' : '') %>"><%= row.browser %></span></td><td><code><%= row.last_visit_time %></code></td><td><strong><%= row.title %></strong></td><td class="url-cell"><%= row.url %></td><td><%= row.visit_count %></td></tr><% }) %><% } %>
                 </tbody>
             </table>
         </div>
         <div class="table-card">
-            <div class="table-header">
-                <h3>Active Network Connections</h3>
-                <span>Showing <%= Math.min(network.length, 100) %> of <%= network.length %></span>
-            </div>
+            <div class="table-header"><h3>Active Network Connections</h3><span>Showing <%= Math.min(network.length, 100) %> of <%= network.length %></span></div>
             <table>
                 <thead><tr><th>Proto</th><th>Local Address</th><th>Foreign Address</th><th>State</th><th>PID</th></tr></thead>
                 <tbody>
-                    <% network.slice(0, 100).forEach(conn => { %>
-                        <tr>
-                            <td><strong><%= conn.protocol %></strong></td>
-                            <td><code><%= conn.localAddress %></code></td>
-                            <td><code><%= conn.foreignAddress %></code></td>
-                            <td><%= conn.state %></td>
-                            <td><code><%= conn.pid %></code></td>
-                        </tr>
-                    <% }) %>
+                    <% network.slice(0, 100).forEach(conn => { %><tr><td><strong><%= conn.protocol %></strong></td><td><code><%= conn.localAddress %></code></td><td><code><%= conn.foreignAddress %></code></td><td><%= conn.state %></td><td><code><%= conn.pid %></code></td></tr><% }) %>
                 </tbody>
             </table>
         </div>
         <div class="table-card">
-            <div class="table-header">
-                <h3>Running Processes</h3>
-                <span>Showing <%= Math.min(processes.length, 100) %> of <%= processes.length %></span>
-            </div>
+            <div class="table-header"><h3>Running Processes</h3><span>Showing <%= Math.min(processes.length, 100) %> of <%= processes.length %></span></div>
             <table>
                 <thead><tr><th>Image Name</th><th>PID</th><th>Session</th><th>Memory Usage</th></tr></thead>
                 <tbody>
-                    <% processes.slice(0, 100).forEach(proc => { %>
-                        <tr>
-                            <td><strong><%= proc.name %></strong></td>
-                            <td><code><%= proc.pid %></code></td>
-                            <td><%= proc.sessionName %></td>
-                            <td><%= proc.memUsage %></td>
-                        </tr>
-                    <% }) %>
+                    <% processes.slice(0, 100).forEach(proc => { %><tr><td><strong><%= proc.name %></strong></td><td><code><%= proc.pid %></code></td><td><%= proc.sessionName %></td><td><%= proc.memUsage %></td></tr><% }) %>
                 </tbody>
             </table>
         </div>
-        <div class="footer">Automated DFIR Forensic Evidence Collector v1.0.0 &bull; Host: <%= osMetrics.hostname %></div>
+        <div class="footer">Automated DFIR Forensic Evidence Collector v1.1.0 &bull; Host: <%= osMetrics.hostname %></div>
     </div>
-    <script>
-        function filterTables() {
-            const filter = document.getElementById("tableFilter").value.toLowerCase();
-            const rows = document.querySelectorAll("tbody tr");
-            rows.forEach(row => {
-                row.style.display = row.textContent.toLowerCase().includes(filter) ? "" : "none";
-            });
-        }
-    </script>
+    <script>function filterTables() { const f = document.getElementById("tableFilter").value.toLowerCase(); document.querySelectorAll("tbody tr").forEach(r => { r.style.display = r.textContent.toLowerCase().includes(f) ? "" : "none"; }); }</script>
 </body>
 </html>

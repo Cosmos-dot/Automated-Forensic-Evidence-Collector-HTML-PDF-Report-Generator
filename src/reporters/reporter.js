@@ -1,7 +1,8 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
 const { execFileSync } = require('child_process');
+
 function getBrowserPath() {
     const paths = [
         'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
@@ -11,46 +12,35 @@ function getBrowserPath() {
     ];
     return paths.find(p => fs.existsSync(p)) || null;
 }
+
 async function generateReports(artifacts, manifest, outputDir, skipPdf = false) {
-    if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-    }
+    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
     const htmlPath = path.join(outputDir, 'report.html');
     const pdfPath = path.join(outputDir, 'report.pdf');
     const templatePath = path.resolve(__dirname, '../../templates/reportTemplate.ejs');
-    if (!fs.existsSync(templatePath)) {
-        throw new Error(`EJS template not found at: ${templatePath}`);
-    }
+
     console.log('[*] Rendering executive HTML report via EJS...');
     const htmlContent = await ejs.renderFile(templatePath, {
         osMetrics: artifacts.osMetrics,
         processes: artifacts.processes,
         network: artifacts.network,
+        scheduledTasks: artifacts.scheduledTasks,
         registry: artifacts.registry,
         history: artifacts.history,
         manifest,
         acquisitionTime: new Date().toLocaleString()
     });
+
     fs.writeFileSync(htmlPath, htmlContent, 'utf8');
     console.log(`[+] HTML Report saved:     ${htmlPath}`);
-    if (skipPdf) {
-        console.log('[!] PDF generation skipped (--skip-pdf).');
-        return { htmlPath, pdfPath: null };
-    }
+    if (skipPdf) return { htmlPath, pdfPath: null };
+
     const browserPath = getBrowserPath();
-    if (!browserPath) {
-        console.warn('[!] Edge/Chrome CLI not found. Skipping PDF export.');
-        return { htmlPath, pdfPath: null };
-    }
+    if (!browserPath) return { htmlPath, pdfPath: null };
+
     try {
         console.log(`[*] Exporting PDF via ${path.basename(browserPath)}...`);
-        execFileSync(browserPath, [
-            '--headless',
-            '--disable-gpu',
-            '--no-pdf-header-footer',
-            `--print-to-pdf=${pdfPath}`,
-            htmlPath
-        ]);
+        execFileSync(browserPath, ['--headless', '--disable-gpu', '--no-pdf-header-footer', `--print-to-pdf=${pdfPath}`, htmlPath]);
         console.log(`[+] PDF Report saved:      ${pdfPath}`);
         return { htmlPath, pdfPath };
     } catch (err) {
@@ -58,4 +48,5 @@ async function generateReports(artifacts, manifest, outputDir, skipPdf = false) 
         return { htmlPath, pdfPath: null };
     }
 }
+
 module.exports = { generateReports };
